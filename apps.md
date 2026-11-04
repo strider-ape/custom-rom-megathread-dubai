@@ -5,7 +5,7 @@
 | App | Version | Status | Notes |
 |---|---|---|---|
 | AdAway | 6.1.4 | ✅ | Root mode, with the hosts module **plus its bind-mount fix** (see [modules.md](modules.md)) |
-| Iconify | 8.0.0 | ⚠️ setup in progress | SystemUI customization: volume panel, QS panel, clocks, lock screen, icons |
+| Iconify | 8.0.0 | ✅ installed and active (customizations not yet tested) | SystemUI customization: volume panel, QS panel, clocks, lock screen, icons |
 
 ### AdAway 6.1.4: ✅
 
@@ -23,7 +23,7 @@
 - My result: 77,838 domains from 2 default sources. Ad domains resolve to `127.0.0.1`, and normal sites are unaffected. It still works after a reboot.
 - **VPN mode** works without root or the module, but takes up your VPN slot.
 
-### Iconify 8.0.0: ⚠️ (setup in progress)
+### Iconify 8.0.0: ✅ installed and active (customizations not yet tested)
 
 | | |
 |---|---|
@@ -40,6 +40,7 @@ Setup order that worked:
 2. `adb install Iconify.v8.0.0.apk`
 3. **Grant root manually** in ReSukiSU → Superuser. KernelSU managers don't show a root prompt.
 4. Open Iconify, go through its setup, let it build its module, and reboot when asked.
+5. **Scope it in Vector:** Vector → Modules → Iconify → Selection (☑︎≡) → **"Use what the module asks for"**. That adds **System Framework** and **System UI**. Tap **Apply**, then do a **full reboot** (not Vector's soft reboot), so Mountify also mounts at boot.
 
 Gotchas I hit:
 
@@ -47,7 +48,17 @@ Gotchas I hit:
 - **Iconify said "root not accessible" after granting.** Tapping an app in the Superuser list only opens its page; the **Superuser switch** on that page must be on, and the list should show a pink **ROOT** badge. Iconify also keeps a "no root" result until restarted (`adb shell am force-stop com.drdisagree.iconify`), and then it worked.
 - Iconify's README suggests ZygiskNext, but NeoZygisk does the same job. **Only one Zygisk implementation should be installed.**
 
-*Not yet verified: Iconify's module being mounted by Mountify after the reboot, its Xposed hooks loading in Vector, and an actual customization working on Android 17.*
+- **"Module Not Activated: System service not running"** on Iconify's Xposed tab means it's enabled in Vector but **not scoped**. By default, Vector put only Iconify itself in scope. Step 5 above fixed it, and after a reboot the banner was gone.
+
+Verified on 2026-11-04 after the reboot:
+- **Mountify mounted Iconify's module:** 50+ `IconifyComponent*.apk` overlays are present in `/product/overlay`, and `cmd overlay list` shows them registered (one already enabled).
+- **Xposed side active:** Iconify's Xposed tab shows Statusbar, Quick Settings, Lockscreen, Volume Panel and Launcher with no warning banner.
+- **System UI loads the overlays without errors.**
+- AdAway, NeoZygisk and Vector still work.
+
+> ⚠️ **Known limitation:** regular apps marked `UMOUNT` in ReSukiSU (the default) can't see module files, so they log `Failed to open APK '/product/overlay/IconifyComponent….apk'`. I saw this in Launcher and Phone. System UI is unaffected, so volume panel, QS, status bar and lock screen tweaks should work. Overlays that target **other apps or the framework inside regular apps** (for example Launcher tweaks or icon packs in apps) may not apply there. Iconify's README suggests turning off "Umount modules by default" in that case, but that **weakens root hiding for every app**. The better option is turning off umount only for the specific apps you want themed (ReSukiSU → Superuser → app → App Profile).
+
+*Still to test: an actual customization (for example the volume panel style) on Android 17.*
 
 ## Morphe-patched apps
 
