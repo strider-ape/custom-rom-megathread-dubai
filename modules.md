@@ -35,6 +35,34 @@ Notes:
 - By default the manager runs "parasitically" inside the system, so there's **no app icon**. Open it from the Vector notification after booting; the manager can add a home-screen shortcut.
 - LSPosed modules are normal APKs: install one, enable it in Vector → Modules, tick the apps it should hook (its "scope"), then force-stop those apps or reboot.
 - If Vector stops working after a ROM update, try the latest canary build from the same releases page.
+- Vector asks for a **soft reboot** after you enable a framework module. If you dismiss that prompt, there's no soft-reboot button on its home screen, and `adb shell am restart` is refused (the shell lacks the `SHUTDOWN` permission). A normal reboot works.
+
+## LSPosed (Xposed) modules
+
+These are normal APKs, enabled in Vector → Modules.
+
+| Module | Version | Status | What it does |
+|---|---|---|---|
+| Enable Screenshot (DisableFlagSecure) | 5.0.1 | ⚠️ enabled, not yet tested in an app | Allows screenshots and screen recording in apps that block them |
+| PixelXpert | 5.1.1 | ❌ skipped (incompatible) | SystemUI tweaks for Pixel ROMs |
+
+### Enable Screenshot (DisableFlagSecure) 5.0.1: ⚠️
+
+| | |
+|---|---|
+| Source | <https://github.com/LSPosed/DisableFlagSecure/releases/tag/v5.0.1> (official LSPosed organization) |
+| File | `app-release.apk`, package `io.github.lsposed.disableflagsecure` |
+| SHA-256 | `dcf2006ad130ed58e97cc2bc506e9548044349ebd651c07c7646dd51acb4e852` (matches GitHub) |
+| Signing cert | `2651b5caf28b2f62be8cead5df2be82cc90f9c8a954464878bb5880b62db718f` (same key as v5.0.0) |
+| API | Modern Xposed API 101, which Vector 2.2 supports (it reports API 102) |
+| Scope | System Framework + System UI. The module sets these itself, so there's nothing to tick |
+| Status | Vector enabled it automatically after `adb install`. After a reboot the phone boots fine, Vector is hooked into `system_server`, and AdAway still works. **Not yet confirmed by taking a screenshot in an app that blocks it** |
+
+### PixelXpert: ❌ don't install on Android 17
+
+- The repo (<https://github.com/siavash79/PixelXpert>) was **archived in June 2026**.
+- The last release (v5.1.1) officially supports only **stock Pixel Android 16 QPR1/QPR2**. It doesn't support Android 17 or AOSP custom ROMs.
+- Its install notes warn that on KernelSU you must turn off "unmount modules by default" **"or your device will bootloop"**. It also hooks SystemUI, so a version mismatch risks a SystemUI crash loop.
 
 ## systemless hosts KernelSU module v1.2.2: ✅ only with a bind-mount fix
 
