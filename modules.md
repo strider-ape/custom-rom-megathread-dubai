@@ -6,7 +6,7 @@ Tested on **Infinity X 4.1 (Android 17) + ReSukiSU 4.2.0-rc3**. To install a mod
 |---|---|---|---|
 | NeoZygisk | v2.4 | ✅ | Zygisk for KernelSU; required by Vector/LSPosed |
 | Vector | v2.2 | ✅ | Xposed framework, the maintained continuation of LSPosed |
-| systemless hosts KernelSU module | v1.2.2 | ⚠️ | Writable `/system/etc/hosts` for AdAway |
+| systemless hosts KernelSU module | v1.2.2 + bind-mount fix | ✅ (with fix) | Writable `/system/etc/hosts` for AdAway. **Doesn't work unmodified on dubai**; see below |
 
 ## NeoZygisk v2.4: ✅
 
@@ -36,21 +36,52 @@ Notes:
 - LSPosed modules are normal APKs: install one, enable it in Vector → Modules, tick the apps it should hook (its "scope"), then force-stop those apps or reboot.
 - If Vector stops working after a ROM update, try the latest canary build from the same releases page.
 
-## systemless hosts KernelSU module v1.2.2: ⚠️
+## systemless hosts KernelSU module v1.2.2: ✅ only with a bind-mount fix
 
 | | |
 |---|---|
 | Source | <https://github.com/symbuzzer/systemless-hosts-KernelSU-module/releases/tag/v1.2.2> |
 | File | `systemless-hosts-KernelSU-module.zip` |
 | SHA-256 | `a5195f6cacc1be26299fb566785f4bd1587e7d1ca10cace8581b6649f81d9b02` (matches GitHub) |
-| What it does | Copies `/system/etc/hosts` into the module and mounts it over `/system/etc` at boot, so AdAway's root mode can edit it. It's about 10 lines of script, which I read before installing |
-| Status | Installed and rebooted, but `/system/etc` **wasn't overlay-mounted** and the hosts file still had only 2 lines |
-| Likely fix | The module only works when the manager uses **OverlayFS**, not magic mount. Turn on OverlayFS in ReSukiSU's settings, reboot, then apply AdAway again. *(Not verified yet.)* |
+| What it does | Copies `/system/etc/hosts` into the module and, at boot, mounts that copy over `/system/etc` with **overlayfs**, so AdAway's root mode can edit it |
 
-To check it's working:
+### Why it fails on dubai
 
-```bash
-adb shell "grep ' /system/etc ' /proc/mounts; wc -l /system/etc/hosts"
+The kernel rejects the overlay at every boot. `dmesg` shows:
+
+```
+overlayfs: filesystem on '/data/adb/modules/systemless-hosts-KernelSU-module/system/etc' not supported
 ```
 
-When it works, you should see an overlay mount and thousands of lines.
+`/data` is f2fs, and this 5.4 kernel's overlayfs won't use it as an upper dir. The module installs without errors, but nothing gets mounted. ReSukiSU 4.2.0-rc3 has no OverlayFS or magic-mount setting that changes this.
+
+> ⚠️ **Side effect:** with no writable hosts file, AdAway's root mode **remounts the system partition read-write and writes to it directly**. On dubai the system partition is 100% full, so the write fails partway and leaves `/system/etc/hosts` **empty (0 bytes)**. The file can't be restored, because even 56 bytes won't fit. It's harmless once the fix below is in place (and a ROM reflash rewrites it), but **apply the fix before opening AdAway**.
+
+### The fix: bind-mount the file instead of overlaying the folder
+
+Replace the module's `service.sh` (in `/data/adb/modules/systemless-hosts-KernelSU-module/`) with:
+
+```sh
+MODDIR="${0%/*}"
+# Bind-mount the hosts file instead of overlayfs: this kernel's overlayfs
+# rejects /data (f2fs) as an upper dir, so the original overlay never mounted.
+mount -o bind "$MODDIR/system/etc/hosts" /system/etc/hosts
+```
+
+Then reboot. You can also run the `mount` line as root to activate it right away. Then, in AdAway, pause and resume blocking so it writes its list. AdAway then writes into the module's copy on `/data` and never touches `/system`.
+
+Verified on 2026-11-04, **including after a reboot**:
+- The bind mount is present in the global mount namespace.
+- netd (the system DNS resolver) sees all 77,847 lines.
+- Ad domains resolve to `127.0.0.1`, while normal sites and `localhost` resolve correctly.
+
+### Checking it
+
+Run these as root (allow Shell in ReSukiSU's Superuser list first):
+
+```bash
+adb shell su -c "grep hosts /proc/1/mountinfo"   # should list the bind mount
+adb shell ping -c1 ad.doubleclick.net             # should say 127.0.0.1
+```
+
+Without root, the adb shell can't see module mounts (it's set to `UMOUNT` by default), so a plain `cat /system/etc/hosts` from adb is **not** a reliable check. The `ping` test is: DNS goes through netd, which does see the mount.
