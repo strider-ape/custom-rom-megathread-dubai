@@ -7,6 +7,7 @@ Tested on **Infinity X 4.1 (Android 17) + ReSukiSU 4.2.0-rc3**. To install a mod
 | NeoZygisk | v2.4 | ✅ | Zygisk for KernelSU; required by Vector/LSPosed |
 | Vector | v2.2 | ✅ | Xposed framework, the maintained continuation of LSPosed |
 | systemless hosts KernelSU module | v1.2.2 + bind-mount fix | ✅ (with fix) | Writable `/system/etc/hosts` for AdAway. **Doesn't work unmodified on dubai**; see below |
+| Mountify | v2.0.5 | ✅ installed and active | Metamodule that mounts other modules' `system/` files. Iconify needs it |
 
 ## NeoZygisk v2.4: ✅
 
@@ -36,6 +37,30 @@ Notes:
 - LSPosed modules are normal APKs: install one, enable it in Vector → Modules, tick the apps it should hook (its "scope"), then force-stop those apps or reboot.
 - If Vector stops working after a ROM update, try the latest canary build from the same releases page.
 - Vector asks for a **soft reboot** after you enable a framework module. If you dismiss that prompt, there's no soft-reboot button on its home screen, and `adb shell am restart` is refused (the shell lacks the `SHUTDOWN` permission). A normal reboot works.
+
+## Mountify v2.0.5 (metamodule): ✅
+
+Newer KernelSU builds (including ReSukiSU 4.x) no longer mount modules' `system/` folders themselves. A **metamodule** does that job, and Iconify's README says KernelSU 3.0+ users need Mountify.
+
+| | |
+|---|---|
+| Source | <https://github.com/backslashxx/mountify/releases> (latest: 205 / v2.0.5) |
+| File | `mountify.zip` |
+| SHA-256 | `2b1850e73bfb0b3dcec8b250272ee9a172b7456f5e2cb53bb5b11d5a0b8848c9` (matches GitHub) |
+| What I checked in the zip | The shell scripts make no network calls; the only URLs are in comments. The optional "nuke" kernel modules are off by default (`enable_lkm_nuke=0`) and none are built for kernel 5.4. It skips any module that ships `system/etc/hosts` and respects `skip_mount`, so the hosts module's bind-mount fix is left alone |
+| How it handles dubai's f2fs | It copies module files into tmpfs, or an **ext4 image** if tmpfs lacks xattr support, and overlays from there, avoiding the f2fs limitation that breaks the plain hosts module. On dubai it picked the **ext4 fallback** |
+| Install log (ksud) | `Installing metamodule: mountify` → `Creating metamodule symlink: /data/adb/metamodule -> /data/adb/modules/mountify` → `installed successfully` |
+| After a reboot | ReSukiSU's module card shows **`mode: auto 🤖 \| fstype: ext4 🛠️ \| no modules mounted`** ("no modules mounted" is expected until a module with `system/` files is installed). AdAway, NeoZygisk and Vector all still worked |
+
+Settings for Iconify, changed in ReSukiSU → Modules → mountify → 📄 (web UI):
+
+| Setting | Value | Note |
+|---|---|---|
+| `mountify_mounts` | `2` (auto) | the default |
+| `MOUNT_DEVICE_NAME` | **`KSU`** | default is `overlay`; Iconify asks for `KSU` |
+| `mountify_custom_umount` | `0` | the default |
+
+On the module card, **▶** runs its action script, **📄** opens the settings web UI and **🗑** uninstalls it. Settings take effect at the next reboot.
 
 ## LSPosed (Xposed) modules
 
