@@ -4,9 +4,9 @@
 
 | App | Version | Status | Notes |
 |---|---|---|---|
-| AdAway | 6.1.4 | ⚠️ | Installed; blocking isn't active until the hosts module works (see [modules.md](modules.md)) |
+| AdAway | 6.1.4 | ✅ | Root mode, with the hosts module **plus its bind-mount fix** (see [modules.md](modules.md)) |
 
-### AdAway 6.1.4: ⚠️
+### AdAway 6.1.4: ✅
 
 | | |
 |---|---|
@@ -17,7 +17,10 @@
 | Package | `org.adaway` |
 
 - The F-Droid build is signed with **F-Droid's** key, not the developer's. Pick one source and stick with it, because Android won't let you update an app from one source with a build from the other.
-- **Root mode** on KernelSU needs the systemless hosts module. **VPN mode** works without root but takes up your VPN slot.
+- **Root mode** on KernelSU needs the systemless hosts module. On dubai that module only works after the bind-mount fix in [modules.md](modules.md). **Apply the fix before opening AdAway.** Otherwise AdAway writes to the full system partition and leaves `/system/etc/hosts` empty.
+- After switching to root mode, **pause and resume** blocking once so AdAway writes its list into the bind-mounted file. The home screen should say **"Hosts file successfully updated"**.
+- My result: 77,838 domains from 2 default sources. Ad domains resolve to `127.0.0.1`, and normal sites are unaffected. It still works after a reboot.
+- **VPN mode** works without root or the module, but takes up your VPN slot.
 
 ## Morphe-patched apps
 
