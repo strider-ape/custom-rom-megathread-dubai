@@ -5,6 +5,7 @@
 | App | Version | Status | Notes |
 |---|---|---|---|
 | AdAway | 6.1.4 | ✅ | Root mode, with the hosts module **plus its bind-mount fix** (see [modules.md](modules.md)) |
+| Iconify | 8.0.0 | ⚠️ setup in progress | SystemUI customization: volume panel, QS panel, clocks, lock screen, icons |
 
 ### AdAway 6.1.4: ✅
 
@@ -21,6 +22,32 @@
 - After switching to root mode, **pause and resume** blocking once so AdAway writes its list into the bind-mounted file. The home screen should say **"Hosts file successfully updated"**.
 - My result: 77,838 domains from 2 default sources. Ad domains resolve to `127.0.0.1`, and normal sites are unaffected. It still works after a reboot.
 - **VPN mode** works without root or the module, but takes up your VPN slot.
+
+### Iconify 8.0.0: ⚠️ (setup in progress)
+
+| | |
+|---|---|
+| Source | <https://github.com/Mahmud0808/Iconify/releases/tag/v8.0.0> |
+| File | `Iconify.v8.0.0.apk`, package `com.drdisagree.iconify` |
+| SHA-256 | `7cd95ac2355b156535b5ebf7646af60bfa9cf0e4d6050227d923747affcc8452` (matches GitHub) |
+| Signing cert | `4af4ffa12ce90815a1775c4604ea16c19f5bed2a6e09ae7c3c92815982af052e` (same key as v7.3.0) |
+| Android support | v8.0.0 is for **Android 16 QPR1 and later**; v7.3.0 is the last release for older versions. It came out in May 2026, **before Android 17**, so Android 17 isn't officially listed |
+| Requirements | AOSP-based ROM ✅ · KernelSU/APatch/Magisk root ✅ · **Mountify** on KernelSU 3.0+ ✅ (see [modules.md](modules.md)) · LSPosed/Vector for its Xposed features ✅ |
+
+Setup order that worked:
+
+1. Install **Mountify**, reboot, set `MOUNT_DEVICE_NAME=KSU` in its web UI. You can skip the separate reboot if you install Iconify straight after; one reboot at the end covers both.
+2. `adb install Iconify.v8.0.0.apk`
+3. **Grant root manually** in ReSukiSU → Superuser. KernelSU managers don't show a root prompt.
+4. Open Iconify, go through its setup, let it build its module, and reboot when asked.
+
+Gotchas I hit:
+
+- **Iconify wasn't in ReSukiSU's Superuser list.** The manager caches its app list, so force-stop and reopen ReSukiSU after installing a new app.
+- **Iconify said "root not accessible" after granting.** Tapping an app in the Superuser list only opens its page; the **Superuser switch** on that page must be on, and the list should show a pink **ROOT** badge. Iconify also keeps a "no root" result until restarted (`adb shell am force-stop com.drdisagree.iconify`), and then it worked.
+- Iconify's README suggests ZygiskNext, but NeoZygisk does the same job. **Only one Zygisk implementation should be installed.**
+
+*Not yet verified: Iconify's module being mounted by Mountify after the reboot, its Xposed hooks loading in Vector, and an actual customization working on Android 17.*
 
 ## Morphe-patched apps
 
