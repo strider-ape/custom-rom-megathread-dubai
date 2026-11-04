@@ -32,6 +32,9 @@ These are my own tested notes on custom ROMs, root, modules and apps for the **M
 | Xposed | Vector v2.2 (maintained continuation of LSPosed) | ✅ |
 | Ad blocking | AdAway 6.1.4 + systemless hosts KernelSU module (with bind-mount fix) | ✅ |
 | Patched apps | Morphe Manager 2.3.0, YouTube 21.30.216, Reddit 2026.40.0 | ✅ |
+| Metamodule | Mountify v2.0.5 (ext4 fallback mode) | ✅ |
+| UI customization | Iconify 8.0.0 | ⚠️ setup in progress |
+| Xposed modules | Enable Screenshot (DisableFlagSecure) 5.0.1 | ⚠️ enabled, untested |
 
 ## Contents
 
