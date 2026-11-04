@@ -30,7 +30,7 @@ These are my own tested notes on custom ROMs, root, modules and apps for the **M
 | Root | ReSukiSU (KernelSU fork) + SuSFS, using the ROM maintainer's boot.img | ✅ |
 | Zygisk | NeoZygisk v2.4 | ✅ |
 | Xposed | Vector v2.2 (maintained continuation of LSPosed) | ✅ |
-| Ad blocking | AdAway 6.1.4 + systemless hosts KernelSU module | ⚠️ |
+| Ad blocking | AdAway 6.1.4 + systemless hosts KernelSU module (with bind-mount fix) | ✅ |
 | Patched apps | Morphe Manager 2.3.0, YouTube 21.30.216, Reddit 2026.40.0 | ✅ |
 
 ## Contents
